@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Locação de Filmes</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ffb6d5 0%, #ff69b4 100%);
+            min-height: 100vh;
+            color: #222;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto 0 auto;
+            background: rgba(255,255,255,0.85);
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(255,105,180,0.25);
+            padding: 32px 28px 28px 28px;
+            overflow-x: auto; /* Adicionado */
+            word-break: break-word; /* Adicionado */
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 18px;
+            letter-spacing: 2px;
+            color: #e75480 !important;
+            text-shadow: 1px 2px 8px #fff0f6;
+        }
+        h3 {
+            margin-top: 28px;
+            color: #ff1493 !important;
+            letter-spacing: 1px;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            font-weight: bold;
+            color: #e75480 !important;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            border: 1px solid #ff69b4;
+            border-radius: 6px;
+            background: #fff0f6;
+            color: #222;
+            font-size: 1rem;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            border: 1.5px solid #ff1493;
+            outline: none;
+        }
+        input::placeholder {
+            color: #ffb6d5;
+        }
+        button {
+            background: linear-gradient(90deg, #ff69b4 60%, #ff1493 100%);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #ffb6d5;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #ff1493 60%, #e75480 100%);
+            transform: translateY(-2px) scale(1.04);
+        }
+        #output {
+            margin-top: 30px;
+        }
+        .movie {
+            margin: 18px 0;
+            padding: 18px 16px 12px 16px;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #fff0f6 60%, #ffb6d5 100%);
+            box-shadow: 0 2px 12px #ffb6d5;
+            border-left: 6px solid #ff69b4;
+            color: #222;
+            position: relative;
+            max-width: 100%; /* Adicionado */
+            word-break: break-word; /* Adicionado */
+            overflow-wrap: break-word; /* Adicionado */
+        }
+        .movie.available {
+            border-left: 6px solid #ff69b4;
+        }
+        .movie.rented {
+            border-left: 6px solid #e75480;
+            background: linear-gradient(90deg, #ffe4f0 60%, #e75480 100%);
+        }
+        .movie strong {
+            font-size: 1.2rem;
+            color: #ff1493 !important;
+        }
+        .movie span {
+            font-weight: bold;
+            color: #e75480 !important;
+        }
+        .movie em {
+            font-style: normal;
+            font-weight: bold;
+            color: #ff69b4 !important;
+        }
+        .movie button {
+            margin-top: 10px;
+            margin-left: 0;
+            padding: 6px 16px;
+            font-size: 0.95rem;
+            border-radius: 5px;
+            box-shadow: none;
+        }
+        @media (max-width: 700px) {
+            .container {
+                max-width: 98vw;
+                padding: 12px 4vw 18px 4vw;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Locação de Filmes</h1>
+
+        <!-- Formulário para adicionar filmes -->
+        <h3>Adicionar Filme</h3>
+        <label for="movieName">Nome do Filme:</label>
+        <input type="text" id="movieName" placeholder="Ex: Vingadores">
+        <label for="movieYear">Ano:</label>
+        <input type="text" id="movieYear" placeholder="Ex: 2019">
+        <button onclick="addMovie()">Adicionar Filme</button>
+
+        <!-- Formulário para alugar filmes -->
+        <h3>Alugar Filme</h3>
+        <label for="rentMovieName">Nome do Filme:</label>
+        <input type="text" id="rentMovieName" placeholder="Ex: Vingadores">
+        <label for="clientName">Nome do Cliente:</label>
+        <input type="text" id="clientName" placeholder="Ex: Maria">
+        <label for="clientAddress">Endereço:</label>
+        <input type="text" id="clientAddress" placeholder="Ex: Rua das Flores, 123">
+        <label for="clientContact">Contato:</label>
+        <input type="text" id="clientContact" placeholder="Ex: (11) 99999-9999">
+        <button onclick="rentMovie()">Alugar Filme</button>
+
+        <!-- Output: Lista de filmes -->
+        <div id="output">
+            <h3>Filmes Disponíveis</h3>
+            <div id="moviesList"></div>
+        </div>
+    </div>
+    <script>
+        // Array para armazenar os filmes da locadora
+        let movies = [];
+
+        // Função para adicionar filmes à locadora
+        function addMovie() {
+            // Captura os valores dos inputs
+            const name = document.getElementById("movieName").value;
+            const year = document.getElementById("movieYear").value;
+
+            // Verifica se os campos não estão vazios
+            if (name === "" || year === "") {
+                alert("Por favor, preencha todos os campos!");
+                return;
+            }
+
+            // Cria um objeto de filme
+            const newMovie = {
+                name: name,
+                year: year,
+                rented: false,
+                client: null // cliente que alugou
+            };
+
+            // Adiciona o filme ao array
+            movies.push(newMovie);
+            document.getElementById("movieName").value = "";
+            document.getElementById("movieYear").value = "";
+            saveMovies(); // Salva após adicionar
+            updateMoviesList();
+        }
+
+        // Função para alugar um filme
+        function rentMovie() {
+            const movieName = document.getElementById("rentMovieName").value;
+            const clientName = document.getElementById("clientName").value;
+            const clientAddress = document.getElementById("clientAddress").value;
+            const clientContact = document.getElementById("clientContact").value;
+
+            if (movieName === "" || clientName === "" || clientAddress === "" || clientContact === "") {
+                alert("Por favor, preencha todos os campos do cliente e do filme!");
+                return;
+            }
+
+            const movie = movies.find(m => m.name.toLowerCase() === movieName.toLowerCase());
+
+            if (!movie) {
+                alert("Filme não encontrado!");
+                return;
+            }
+
+            if (movie.rented) {
+                alert("Este filme já está alugado!");
+                return;
+            }
+
+            movie.rented = true;
+            movie.client = {
+                name: clientName,
+                address: clientAddress,
+                contact: clientContact
+            };
+            document.getElementById("rentMovieName").value = "";
+            document.getElementById("clientName").value = "";
+            document.getElementById("clientAddress").value = "";
+            document.getElementById("clientContact").value = "";
+            saveMovies(); // Salva após alugar
+            updateMoviesList();
+        }
+
+        // Função para retornar um filme
+        function returnMovie(index) {
+            if (movies[index].rented) {
+                movies[index].rented = false;
+                movies[index].client = null;
+                saveMovies(); // Salva após devolver
+                updateMoviesList();
+            }
+        }
+
+    
+        function saveMovies() {
+            localStorage.setItem('locadora_movies', JSON.stringify(movies));
+        }
+
+        function loadMovies() {
+            const data = localStorage.getItem('locadora_movies');
+            if (data) {
+                movies = JSON.parse(data);
+            }
+        }
+
+        function updateMoviesList() {
+            const moviesListDiv = document.getElementById("moviesList");
+            moviesListDiv.innerHTML = "";
+
+            if (movies.length === 0) {
+                moviesListDiv.innerHTML = "<p>Não há filmes cadastrados na locadora.</p>";
+                return;
+            }
+
+            movies.forEach((movie, index) => {
+                const movieDiv = document.createElement("div");
+                movieDiv.classList.add("movie");
+
+                if (movie.rented) {
+                    movieDiv.classList.add("rented");
+                } else {
+                    movieDiv.classList.add("available");
+                }
+
+                movieDiv.innerHTML = `
+                    <strong>${movie.name}</strong> (${movie.year}) 
+                    - <span>${movie.rented ? "Alugado" : "Disponível"}</span>
+                `;
+                if (movie.rented && movie.client) {
+                    movieDiv.innerHTML += `
+                        <br><em>Cliente:</em> ${movie.client.name}
+                        <br><em>Endereço:</em> ${movie.client.address}
+                        <br><em>Contato:</em> ${movie.client.contact}
+                    `;
+                    const returnBtn = document.createElement("button");
+                    returnBtn.textContent = "Devolver";
+                    returnBtn.onclick = function() {
+                        returnMovie(index);
+                    };
+                    movieDiv.appendChild(returnBtn);
+                }
+
+                moviesListDiv.appendChild(movieDiv);
+            });
+        }
+        loadMovies();
+        updateMoviesList();
+    </script>
+</body>
+</html>
